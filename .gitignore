@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+*.log
+.DS_Store
+*.zip
+build/
+.vscode/
+.idea/
+config/secrets.json
+
