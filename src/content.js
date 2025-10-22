@@ -163,36 +163,11 @@ class LinkedInChatExtractor {
       this.startVoiceRecognition();
     });
 
-    // Keyboard shortcut listener
-    document.addEventListener('keydown', (e) => {
-      // Ctrl/Cmd + Shift + M
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'M') {
-        e.preventDefault();
-        this.toggleOverlay();
-      }
-    });
+    // REMOVED duplicate keyboard shortcut listener - handled by background.js only
   }
 
-  toggleOverlay() {
-    const overlay = document.getElementById('meeting-assistant-overlay');
-    if (overlay) {
-      overlay.classList.toggle('hidden');
-      this.overlayActive = !this.overlayActive;
-      
-      if (this.overlayActive) {
-        this.currentContext = this.extractChatContext();
-      }
-    }
-  }
-
-  showOverlay() {
-    const overlay = document.getElementById('meeting-assistant-overlay');
-    if (overlay) {
-      overlay.classList.remove('hidden');
-      this.overlayActive = true;
-      this.currentContext = this.extractChatContext();
-    }
-  }
+  // REMOVED: toggleOverlay() and showOverlay() functions
+  // Keyboard shortcut now opens popup window instead of side overlay
 
   hideOverlay() {
     const overlay = document.getElementById('meeting-assistant-overlay');
@@ -380,10 +355,8 @@ function initializeExtension() {
 
 // Listen for messages from background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'activateAssistant') {
-    chatExtractor?.showOverlay();
-    sendResponse({ success: true });
-  } else if (request.action === 'getContext') {
+  // REMOVED: activateAssistant action - keyboard shortcut now opens popup directly via background.js
+  if (request.action === 'getContext') {
     const context = chatExtractor?.extractChatContext();
     sendResponse({ context });
   }

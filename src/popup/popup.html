@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Meeting Scheduler</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 380px;
+      min-height: 500px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .popup-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      text-align: center;
+      border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+    }
+
+    .logo {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: #718096;
+    }
+
+    .content {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    .tab-buttons {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .tab-button {
+      flex: 1;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid transparent;
+      border-radius: 8px;
+      color: #4a5568;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-button:hover {
+      background: white;
+      border-color: rgba(102, 126, 234, 0.3);
+    }
+
+    .tab-button.active {
+      background: white;
+      border-color: #667eea;
+      color: #667eea;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .voice-section {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 24px;
+      border-radius: 12px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .voice-button {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      color: white;
+      font-size: 48px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .voice-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5);
+    }
+
+    .voice-button:active {
+      transform: scale(0.95);
+    }
+
+    .voice-button.listening {
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+      }
+      50% {
+        box-shadow: 0 8px 40px rgba(102, 126, 234, 0.8);
+      }
+    }
+
+    .voice-status {
+      font-size: 14px;
+      color: #4a5568;
+      margin-bottom: 8px;
+    }
+
+    .transcription {
+      min-height: 40px;
+      font-size: 15px;
+      color: #2d3748;
+      font-style: italic;
+      padding: 12px;
+      background: rgba(102, 126, 234, 0.1);
+      border-radius: 8px;
+      margin-top: 12px;
+    }
+
+    .quick-actions {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    .quick-actions h3 {
+      font-size: 16px;
+      color: #2d3748;
+      margin-bottom: 12px;
+    }
+
+    .action-button {
+      width: 100%;
+      padding: 12px;
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      color: #2d3748;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 8px;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .action-button:hover {
+      border-color: #667eea;
+      background: #f7fafc;
+    }
+
+    .action-icon {
+      font-size: 20px;
+    }
+
+    .settings-section {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    .setting-group {
+      margin-bottom: 20px;
+    }
+
+    .setting-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .setting-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 8px;
+    }
+
+    .setting-input,
+    .setting-select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #2d3748;
+      transition: border-color 0.2s;
+    }
+
+    .setting-input:focus,
+    .setting-select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .setting-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .setting-checkbox input {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .save-button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 16px;
+    }
+
+    .save-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .status-message {
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      text-align: center;
+      margin-top: 12px;
+    }
+
+    .status-success {
+      background: rgba(72, 187, 120, 0.2);
+      color: #2f855a;
+    }
+
+    .status-error {
+      background: rgba(245, 101, 101, 0.2);
+      color: #c53030;
+    }
+
+    .history-section {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    .history-item {
+      padding: 12px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .history-item-name {
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 4px;
+    }
+
+    .history-item-date {
+      font-size: 12px;
+      color: #718096;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #4a5568;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .footer {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 12px 20px;
+      text-align: center;
+      font-size: 11px;
+      color: #718096;
+      border-top: 1px solid rgba(102, 126, 234, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="popup-container">
+    <div class="header">
+      <div class="logo">🤖</div>
+      <div class="title">Smart Meeting Scheduler</div>
+      <div class="subtitle">AI-Powered Voice Assistant</div>
+    </div>
+
+    <div class="content">
+      <div class="tab-buttons">
+        <button class="tab-button active" data-tab="home">Home</button>
+        <button class="tab-button" data-tab="settings">Settings</button>
+        <button class="tab-button" data-tab="history">History</button>
+      </div>
+
+      <!-- Home Tab -->
+      <div id="home-tab" class="tab-content active">
+        <div class="voice-section">
+          <button id="voice-button" class="voice-button">
+            <span>🎤</span>
+          </button>
+          <div class="voice-status" id="voice-status">Click to start voice command</div>
+          <div class="transcription" id="transcription"></div>
+        </div>
+
+        <div class="quick-actions">
+          <h3>Quick Actions</h3>
+          <button class="action-button" id="open-linkedin">
+            <span class="action-icon">💼</span>
+            <span>Open LinkedIn Messages</span>
+          </button>
+          <button class="action-button" id="open-calendar">
+            <span class="action-icon">📅</span>
+            <span>Open Google Calendar</span>
+          </button>
+          <button class="action-button" id="check-availability">
+            <span class="action-icon">🕐</span>
+            <span>Check My Availability</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Settings Tab -->
+      <div id="settings-tab" class="tab-content">
+        <div class="settings-section">
+          <div class="setting-group">
+            <label class="setting-label">Default Meeting Platform</label>
+            <select id="default-platform" class="setting-select">
+              <option value="google-meet">Google Meet</option>
+              <option value="zoom">Zoom</option>
+              <option value="teams">Microsoft Teams</option>
+            </select>
+          </div>
+
+          <div class="setting-group">
+            <label class="setting-label">Default Duration (minutes)</label>
+            <select id="default-duration" class="setting-select">
+              <option value="15">15 minutes</option>
+              <option value="30">30 minutes</option>
+              <option value="60">1 hour</option>
+              <option value="90">1.5 hours</option>
+              <option value="120">2 hours</option>
+            </select>
+          </div>
+
+          <div class="setting-group">
+            <label class="setting-label">Timezone</label>
+            <select id="timezone" class="setting-select">
+              <!-- Will be populated by JavaScript -->
+            </select>
+          </div>
+
+          <div class="setting-group">
+            <label class="setting-label">OpenAI API Key (Optional)</label>
+            <input type="password" id="openai-key" class="setting-input" placeholder="sk-...">
+          </div>
+
+          <div class="setting-group">
+            <label class="setting-checkbox">
+              <input type="checkbox" id="voice-activation">
+              <span>Enable voice activation</span>
+            </label>
+          </div>
+
+          <div class="setting-group">
+            <label class="setting-checkbox">
+              <input type="checkbox" id="auto-send">
+              <span>Auto-send messages (no confirmation)</span>
+            </label>
+          </div>
+
+          <button id="save-settings" class="save-button">Save Settings</button>
+          <div id="settings-status"></div>
+        </div>
+      </div>
+
+      <!-- History Tab -->
+      <div id="history-tab" class="tab-content">
+        <div class="history-section">
+          <div id="history-list">
+            <!-- Will be populated by JavaScript -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Press Ctrl+Shift+L (Cmd+Shift+L on Mac) from LinkedIn
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
+
