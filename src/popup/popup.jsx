@@ -120,15 +120,34 @@ class PopupController {
     }
   }
 
-  openVoiceInputPage() {
-    // Open voice input in a new window where microphone permissions work properly
-    chrome.windows.create({
-      url: chrome.runtime.getURL('voice-input.html'),
-      type: 'popup',
-      width: 650,
-      height: 700,
-      focused: true
-    });
+  async handleVoiceButtonClick() {
+    // Check if microphone permission was already granted
+    const result = await chrome.storage.local.get(['microphonePermissionGranted']);
+
+    if (!result.microphonePermissionGranted) {
+      // First time - open setup page
+      this.updateVoiceUI(false, 'Opening microphone setup...');
+      chrome.tabs.create({
+        url: chrome.runtime.getURL('mic-setup.html')
+      });
+    } else {
+      // Permission already granted - use voice directly in popup
+      this.toggleVoiceRecognition();
+    }
+  }
+
+  toggleVoiceRecognition() {
+    if (!this.recognition) {
+      alert('Voice recognition not available. Please use a supported browser.');
+      return;
+    }
+
+    if (this.isListening) {
+      this.recognition.stop();
+    } else {
+      document.getElementById('transcription').textContent = '';
+      this.recognition.start();
+    }
   }
 
   updateVoiceUI(listening, statusText = null) {
